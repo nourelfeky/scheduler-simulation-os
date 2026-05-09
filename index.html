@@ -356,10 +356,8 @@
 
             let current;
             if (type === "priority") {
-                // Priority (Low value = High priority), tie-break Arrival Time
                 available.sort((a, b) => a.pri - b.pri || a.at - b.at);
             } else {
-                // SRTF (Shortest remaining), tie-break Arrival Time
                 available.sort((a, b) => a.remaining - b.remaining || a.at - b.at);
             }
             
@@ -414,10 +412,8 @@
 
             let current;
             if (type === "priority") {
-                // Priority (Low value = High priority), tie-break Arrival Time
                 available.sort((a, b) => a.pri - b.pri || a.at - b.at);
             } else {
-                // SRTF (Shortest remaining), tie-break Arrival Time
                 available.sort((a, b) => a.remaining - b.remaining || a.at - b.at);
             }
             
@@ -476,7 +472,6 @@
             const timeline = document.createElement("div");
             timeline.className = "gantt-timeline";
             
-            // Filter blocks for this PID
             const blocks = ganttData.filter(b => b.pid === pid);
             blocks.forEach(block => {
                 const div = document.createElement("div");
@@ -554,11 +549,9 @@
             tbody.appendChild(tr);
         });
 
-        // Auto-run for valid scenarios
         if (type !== 'D') {
             runSimulation();
         } else {
-            // For D, we run to show the error
             runSimulation();
         }
     }
@@ -577,3 +570,73 @@
         document.getElementById("outputSection").style.display = "none";
         document.getElementById("errorLog").innerText = "";
     }
+        function displayTable(divId, title, stats) {
+        const div = document.getElementById(divId);
+        const avgWT = (stats.reduce((s, x) => s + x.wt, 0) / stats.length).toFixed(2);
+        const avgTAT = (stats.reduce((s, x) => s + x.tat, 0) / stats.length).toFixed(2);
+        
+        let html = `<h4>${title} Results</h4><table><thead><tr><th>PID</th><th>WT</th><th>TAT</th><th>RT</th></tr></thead><tbody>`;
+        stats.forEach(p => {
+            html += `<tr><td>${p.pid}</td><td>${p.wt}</td><td>${p.tat}</td><td>${p.rt}</td></tr>`;
+        });
+        html += `</tbody></table>
+        <div class="metric-card">
+            <strong>Average WT:</strong> ${avgWT}ms<br>
+            <strong>Average TAT:</strong> ${avgTAT}ms
+        </div>`;
+        div.innerHTML = html;
+    }
+
+    function generateConclusion(pStats, sStats) {
+        const pWT = pStats.reduce((s, x) => s + x.wt, 0) / pStats.length;
+        const sWT = sStats.reduce((s, x) => s + x.wt, 0) / sStats.length;
+        const pRT = pStats.reduce((s, x) => s + x.rt, 0) / pStats.length;
+        const sRT = sStats.reduce((s, x) => s + x.rt, 0) / sStats.length;
+        const pTAT = pStats.reduce((s, x) => s + x.tat, 0) / pStats.length;
+        const sTAT = sStats.reduce((s, x) => s + x.tat, 0) / sStats.length;
+        
+
+        let analysis = `
+            <p><strong>Quantitative Evaluation:</strong></p>
+            <ul>
+                <li><strong>Average Waiting Time:</strong> Priority (${pWT.toFixed(2)}ms) vs SRTF (${sWT.toFixed(2)}ms).</li>
+                <li><strong>Average Response Time:</strong> Priority (${pRT.toFixed(2)}ms) vs SRTF (${sRT.toFixed(2)}ms).</li>
+                <li><strong>Average Turnaround Time:</strong> Priority (${pTAT.toFixed(2)}ms) vs SRTF (${sTAT.toFixed(2)}ms).</li>
+            </ul>
+        `;
+        document.getElementById("dynamicAnalysis").innerHTML = analysis;
+
+        let questions = `
+            <div style="background: #f1f5f9; padding: 15px; border-radius: 6px;">
+                <p><strong>Q1: Which algorithm produced the lower average waiting time?</strong><br>
+                A: ${sWT < pWT ? "SRTF" : (sWT > pWT ? "Priority" : "Both")} produced the lower average waiting time (${Math.min(sWT, pWT).toFixed(2)}ms).</p>
+                
+                <p><strong>Q2: Which algorithm produced the lower average response time?</strong><br>
+                A: ${sRT < pRT ? "SRTF" : (sRT > pRT ? "Priority" : "Both")} produced the lower average response time (${Math.min(sRT, pRT).toFixed(2)}ms).</p>
+                
+                <p><strong>Q3: Did priority values improve treatment of urgent processes?</strong><br>
+                A: ${pWT < sWT ? "Yes" : "No"}, in this workload, Priority Scheduling ${pWT < sWT ? "effectively prioritized" : "did not necessarily improve"} the urgent processes relative to the efficiency-driven SRTF.</p>
+                
+                <p><strong>Q4: Did SRTF favor short jobs more aggressively?</strong><br>
+                A: ${sWT <= pWT ? "Yes" : "No"}, SRTF ${sWT <= pWT ? "prioritized shorter remaining bursts" : "behaved similarly to Priority"} to minimize queue length.</p>
+                
+                <p><strong>Q5: Which algorithm would you recommend for the tested workload, and why?</strong><br>
+                A: I would recommend <strong>${sWT <= pWT ? "SRTF" : "Priority"}</strong> because it achieved ${sWT <= pWT ? "maximum efficiency and minimum average delay" : "better alignment with the defined process priorities"}.</p>
+            </div>
+        `;
+        document.getElementById("analysisQuestions").innerHTML = questions;
+
+        let conclusion = `
+            <ul>
+                <li><strong>Better Performance:</strong> ${sWT < pWT ? "SRTF performed better" : (sWT > pWT ? "Priority performed better" : "Both performed equally")} on this dataset.</li>
+                <li><strong>Metric Comparison:</strong> ${sWT <= pWT ? "SRTF was superior in WT and TAT" : "Priority was superior in overall metrics"} for this specific process mix.</li>
+                <li><strong>Main Trade-off:</strong> The primary trade-off observed was <strong>Urgency (Priority) vs. Efficiency (SRTF)</strong>.</li>
+                <li><strong>Fairness in Practice:</strong> ${pWT === sWT ? "Both appeared equally fair." : (pWT < sWT ? "Priority appeared fairer by respecting user-defined importance." : "SRTF appeared fairer by preventing short jobs from being stuck behind long ones.")}</li>
+            </ul>
+        `;
+        document.getElementById("finalConclusion").innerHTML = conclusion;
+    }
+</script>
+
+</body>
+</html>
