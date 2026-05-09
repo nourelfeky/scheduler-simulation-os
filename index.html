@@ -293,3 +293,95 @@
     function removeRow(btn) {
         btn.closest("tr").remove();
     }
+        function validate(data) {
+        const pids = data.map(d => d.pid);
+        if (new Set(pids).size !== pids.length) return "Error: Duplicate PIDs detected.";
+        for (let d of data) {
+            if (d.pid === "") return "Error: PID cannot be empty.";
+            if (d.at < 0 || d.bt <= 0 || d.pri < 0) return "Error: Invalid numeric values (AT >= 0, BT > 0, Priority >= 0).";
+        }
+        return null;
+    }
+
+    function runSimulation() {
+        const rows = document.querySelectorAll("#inputTable tbody tr");
+        const processes = [];
+        const errorDiv = document.getElementById("errorLog");
+        errorDiv.innerText = "";
+
+        rows.forEach(row => {
+            processes.push({
+                pid: row.querySelector(".pid").value,
+                at: parseInt(row.querySelector(".at").value),
+                bt: parseInt(row.querySelector(".bt").value),
+                pri: parseInt(row.querySelector(".pri").value)
+            });
+        });
+
+        const error = validate(processes);
+        if (error) {
+            errorDiv.innerText = error;
+            return;
+        }
+
+        const priorityOutput = simulate(JSON.parse(JSON.stringify(processes)), "priority");
+        const srtfOutput = simulate(JSON.parse(JSON.stringify(processes)), "srtf");
+
+        displayGantt("priorityGantt", priorityOutput.gantt);
+        displayGantt("srtfGantt", srtfOutput.gantt);
+        displayTable("priorityResults", "Priority", priorityOutput.stats);
+        displayTable("srtfResults", "SRTF", srtfOutput.stats);
+        generateConclusion(priorityOutput.stats, srtfOutput.stats);
+
+        document.getElementById("outputSection").style.display = "block";
+    }
+
+    function simulate(procs, type) {
+        let time = 0;
+        let completed = 0;
+        let n = procs.length;
+        let gantt = [];
+        let stats = procs.map(p => ({...p, remaining: p.bt, finish: 0, wt: 0, tat: 0, rt: -1}));
+        let lastPid = null;
+
+        while (completed < n) {
+            let available = stats.filter(p => p.at <= time && p.remaining > 0);
+            
+            if (available.length === 0) {
+                gantt.push({ pid: "IDLE", start: time, duration: 1 });
+                time++;
+                lastPid = "IDLE";
+                continue;
+            }
+
+            let current;
+            if (type === "priority") {
+                // Priority (Low value = High priority), tie-break Arrival Time
+                available.sort((a, b) => a.pri - b.pri || a.at - b.at);
+            } else {
+                // SRTF (Shortest remaining), tie-break Arrival Time
+                available.sort((a, b) => a.remaining - b.remaining || a.at - b.at);
+            }
+            
+            current = available[0];
+            if (current.rt === -1) current.rt = time - current.at;
+            
+            current.remaining--;
+            
+            if (gantt.length > 0 && gantt[gantt.length - 1].pid === current.pid) {
+                gantt[gantt.length - 1].duration++;
+            } else {
+                gantt.push({ pid: current.pid, start: time, duration: 1 });
+            }
+
+            time++;
+            if (current.remaining === 0) {
+                current.finish = time;
+                current.tat = current.finish - current.at;
+                current.wt = current.tat - current.bt;
+                completed++;
+            }
+        }
+        return { stats, gantt };
+    }
+
