@@ -31,19 +31,19 @@ Or use VS Code Live Server:
 ---
 
 ## Project Structure
+
+```text
 scheduler-simulation-os/
 │
 ├── index.html
 ├── Comparison_Report.docx
 ├── Test_Cases/
-│ ├── test1.png
-│ ├── test2.png
-│ ├── test3.png
-│ └── test4.png
-│
+│   ├── test1.png
+│   ├── test2.png
+│   ├── test3.png
+│   └── test4.png
 └── README.md
-
----
+```
 
 ## Description
 
