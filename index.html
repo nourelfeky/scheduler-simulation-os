@@ -385,3 +385,195 @@
         return { stats, gantt };
     }
 
+        displayGantt("priorityGantt", priorityOutput.gantt);
+        displayGantt("srtfGantt", srtfOutput.gantt);
+        displayTable("priorityResults", "Priority", priorityOutput.stats);
+        displayTable("srtfResults", "SRTF", srtfOutput.stats);
+        generateConclusion(priorityOutput.stats, srtfOutput.stats);
+
+        document.getElementById("outputSection").style.display = "block";
+
+
+    function simulate(procs, type) {
+        let time = 0;
+        let completed = 0;
+        let n = procs.length;
+        let gantt = [];
+        let stats = procs.map(p => ({...p, remaining: p.bt, finish: 0, wt: 0, tat: 0, rt: -1}));
+        let lastPid = null;
+
+        while (completed < n) {
+            let available = stats.filter(p => p.at <= time && p.remaining > 0);
+            
+            if (available.length === 0) {
+                gantt.push({ pid: "IDLE", start: time, duration: 1 });
+                time++;
+                lastPid = "IDLE";
+                continue;
+            }
+
+            let current;
+            if (type === "priority") {
+                // Priority (Low value = High priority), tie-break Arrival Time
+                available.sort((a, b) => a.pri - b.pri || a.at - b.at);
+            } else {
+                // SRTF (Shortest remaining), tie-break Arrival Time
+                available.sort((a, b) => a.remaining - b.remaining || a.at - b.at);
+            }
+            
+            current = available[0];
+            if (current.rt === -1) current.rt = time - current.at;
+            
+            current.remaining--;
+            
+            if (gantt.length > 0 && gantt[gantt.length - 1].pid === current.pid) {
+                gantt[gantt.length - 1].duration++;
+            } else {
+                gantt.push({ pid: current.pid, start: time, duration: 1 });
+            }
+
+            time++;
+            if (current.remaining === 0) {
+                current.finish = time;
+                current.tat = current.finish - current.at;
+                current.wt = current.tat - current.bt;
+                completed++;
+            }
+        }
+        return { stats, gantt };
+    }
+
+    function displayGantt(elementId, ganttData) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = "";
+        
+        const pids = [...new Set(ganttData.map(b => b.pid))].sort((a, b) => {
+            if (a === "IDLE") return 1;
+            if (b === "IDLE") return -1;
+            return a.localeCompare(b, undefined, {numeric: true});
+        });
+        
+        const totalDuration = ganttData.length > 0 ? 
+            ganttData[ganttData.length - 1].start + ganttData[ganttData.length - 1].duration : 0;
+        
+        if (totalDuration === 0) return;
+        
+        const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+        const pidColors = {};
+        pids.forEach((pid, i) => {
+            pidColors[pid] = pid === "IDLE" ? "#cbd5e1" : colors[i % colors.length];
+        });
+
+        pids.forEach(pid => {
+            const row = document.createElement("div");
+            row.className = "gantt-row";
+            
+            const label = document.createElement("div");
+            label.className = "gantt-row-label";
+            label.innerText = pid;
+            row.appendChild(label);
+            
+            const timeline = document.createElement("div");
+            timeline.className = "gantt-timeline";
+            
+            // Filter blocks for this PID
+            const blocks = ganttData.filter(b => b.pid === pid);
+            blocks.forEach(block => {
+                const div = document.createElement("div");
+                div.className = "gantt-block " + (block.pid === "IDLE" ? "idle" : "");
+                div.style.left = (block.start / totalDuration * 100) + "%";
+                div.style.width = (block.duration / totalDuration * 100) + "%";
+                div.style.backgroundColor = pidColors[pid];
+                div.innerHTML = `<span>${block.duration}</span>`;
+                timeline.appendChild(div);
+            });
+            
+            row.appendChild(timeline);
+            container.appendChild(row);
+        });
+
+        const axis = document.createElement("div");
+        axis.className = "time-axis";
+        for (let i = 0; i <= totalDuration; i++) {
+            if (totalDuration > 20 && i % 5 !== 0 && i !== totalDuration) continue;
+            
+            const tick = document.createElement("div");
+            tick.className = "time-tick";
+            tick.style.left = (i / totalDuration * 100) + "%";
+            
+            const tickLabel = document.createElement("span");
+            tickLabel.className = "time-tick-label";
+            tickLabel.innerText = i;
+            tick.appendChild(tickLabel);
+            axis.appendChild(tick);
+        }
+        container.appendChild(axis);
+    }
+
+    function loadScenario(type) {
+        const scenarios = {
+            'A': [
+                { pid: "P1", at: 0, bt: 8, pri: 2 },
+                { pid: "P2", at: 1, bt: 4, pri: 1 },
+                { pid: "P3", at: 2, bt: 9, pri: 3 },
+                { pid: "P4", at: 3, bt: 5, pri: 2 }
+            ],
+            'B': [
+                { pid: "P1", at: 0, bt: 20, pri: 1 },
+                { pid: "P2", at: 1, bt: 3, pri: 4 },
+                { pid: "P3", at: 2, bt: 2, pri: 3 },
+                { pid: "P4", at: 3, bt: 4, pri: 2 }
+            ],
+            'C': [
+                { pid: "P1", at: 0, bt: 15, pri: 3 },
+                { pid: "P2", at: 1, bt: 2, pri: 1 },
+                { pid: "P3", at: 2, bt: 2, pri: 1 },
+                { pid: "P4", at: 3, bt: 2, pri: 1 }
+            ],
+            'D': [
+                { pid: "P1", at: 0, bt: 5, pri: 2 },
+                { pid: "P2", at: -1, bt: 3, pri: 1 },
+                { pid: "P3", at: 2, bt: 0, pri: 3 },
+                { pid: "P4", at: 3, bt: 4, pri: -2 }
+            ]
+        };
+
+        const data = scenarios[type];
+        const tbody = document.querySelector("#inputTable tbody");
+        tbody.innerHTML = "";
+        
+        data.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><input type="text" class="pid" value="${p.pid}"></td>
+                <td><input type="number" class="at" value="${p.at}"></td>
+                <td><input type="number" class="bt" value="${p.bt}"></td>
+                <td><input type="number" class="pri" value="${p.pri}"></td>
+                <td><button class="btn-clear" onclick="removeRow(this)">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Auto-run for valid scenarios
+        if (type !== 'D') {
+            runSimulation();
+        } else {
+            // For D, we run to show the error
+            runSimulation();
+        }
+    }
+
+    function resetSimulator() {
+        const tbody = document.querySelector("#inputTable tbody");
+        tbody.innerHTML = `
+            <tr>
+                <td><input type="text" class="pid" value="P1"></td>
+                <td><input type="number" class="at" value="0" min="0"></td>
+                <td><input type="number" class="bt" value="5" min="1"></td>
+                <td><input type="number" class="pri" value="2" min="0"></td>
+                <td><button class="btn-clear" onclick="removeRow(this)">Delete</button></td>
+            </tr>
+        `;
+        document.getElementById("outputSection").style.display = "none";
+        document.getElementById("errorLog").innerText = "";
+    }
