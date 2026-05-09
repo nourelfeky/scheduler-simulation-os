@@ -113,7 +113,34 @@ For each algorithm and each process:
 Averages are reported for WT, TAT, and RT across all processes for both algorithms.
 
 ---
+How to Run
 
+Open the `index.html` file in any web browser.
+
+You can also run it using VS Code Live Server:
+1. Open the project folder in VS Code
+2. Right click on `index.html`
+3. Select "Open with Live Server"
+
+Project Structure
+
+your-project-folder/
+│
+├── index.html
+├── Comparison_Report.word
+├── Test_Cases/
+│   ├── test1.png
+│   ├── test2.png
+│   ├── test3.png
+│   └── test4.png
+│
+└── README.md
+
+Description
+
+- `index.html` contains the complete project implementation including HTML, CSS, and JavaScript in a single file.
+- `Comparison_Report.word` contains the project report and comparison details.
+- `Test_Cases` folder contains screenshots/photos of the test cases used in the project.
 
 
 
