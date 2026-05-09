@@ -204,3 +204,74 @@
     </div>
 
     <div id="outputSection" style="display:none;">
+        <h2>2. Execution Visualization (Gantt Charts)</h2>
+        
+        <div class="gantt-wrapper">
+            <h4>Preemptive Priority Scheduling</h4>
+            <div id="priorityGantt" class="gantt-container"></div>
+        </div>
+
+        <div class="gantt-wrapper">
+            <h4>Shortest Remaining Time First (SRTF)</h4>
+            <div id="srtfGantt" class="gantt-container"></div>
+        </div>
+
+        <h2>3. Performance Metrics</h2>
+        <div class="results-grid">
+            <div id="priorityResults"></div>
+            <div id="srtfResults"></div>
+        </div>
+
+        <div class="report-container">
+            <div class="report-header">
+                <h2>Technical Comparison Report</h2>
+                <p><strong>Project:</strong> CPU Scheduling Comparison (Priority vs SRTF)</p>
+            </div>
+
+            <div class="report-section">
+                <h3>1. Project Overview</h3>
+                <table class="report-table">
+                    <tr><td>Project Title</td><td>Priority vs SRTF Scheduling Simulator</td></tr>
+                    <tr><td>Algorithms</td><td>Preemptive Priority & Shortest Remaining Time First (SRTF)</td></tr>
+                    <tr><td>Focus</td><td>Policy-driven service versus shortest-remaining-time efficiency</td></tr>
+                </table>
+            </div>
+
+            <div class="report-section">
+                <h3>2. Performance Analysis</h3>
+                <div id="dynamicAnalysis">
+                    <p><em>Run the simulation to see the technical analysis...</em></p>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h3>3. Required Analysis Questions</h3>
+                <div id="analysisQuestions">
+                    <p><em>Awaiting simulation results...</em></p>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h3>4. Required Conclusion</h3>
+                <div id="finalConclusion">
+                    <p><em>Awaiting simulation results...</em></p>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h3>5. Fairness vs Efficiency Trade-off</h3>
+                <p>
+                    Priority Scheduling prioritizes "urgency" based on assigned values, which is essential for critical tasks but can lead to <strong>starvation</strong> of low-priority processes. 
+                    In contrast, SRTF maximizes <strong>system throughput</strong> and minimizes average waiting time by favoring shorter jobs, though it may delay longer tasks indefinitely if short jobs keep arriving.
+                </p>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="Comparison_Report.docx" class="download-btn" download>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Download Full Comparison Report (Word)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
