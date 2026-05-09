@@ -275,3 +275,21 @@
         </div>
     </div>
 </div>
+<script>
+    function addRow() {
+        const tbody = document.querySelector("#inputTable tbody");
+        const rowCount = tbody.rows.length + 1;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><input type="text" class="pid" value="P${rowCount}"></td>
+            <td><input type="number" class="at" value="0" min="0"></td>
+            <td><input type="number" class="bt" value="5" min="1"></td>
+            <td><input type="number" class="pri" value="1" min="0"></td>
+            <td><button class="btn-clear" onclick="removeRow(this)">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function removeRow(btn) {
+        btn.closest("tr").remove();
+    }
